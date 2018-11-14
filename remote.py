@@ -167,48 +167,7 @@ def remote_3(args):
         phase = 'remote_3';
 
 
-
-    if iteration == 3:
-        #raise Exception( 'During iteration 2 in line 173 of course in remote funcion')
-        shared_labels = np.loadtxt('test/input/simulatorRun/mnist2500_labels.txt')
-        #shared_labels = np.loadtxt('test/input/simulatorRun/shared_y.txt')
-        #shared_labels = np.loadtxt('test/input/simulatorRun/test_high_dimensional_mnist_label.txt')
-        concat_Y = []
-        concat_local_Y_labels = []
-
-        concat_Y.append(Y)
-        concat_local_Y_labels.append(shared_labels)
-        #concat_local_Y_labels =  np.concatenate(concat_local_Y_labels,shared_labels)
-
-
-        for site in args["input"]:
-            #raise Exception(type(args["input"][site]["local_Y"]))
-            #concat_Y.np.concatenate(args['input'][site]["local_Y"])
-            concat_Y.append(args["input"][site]["local_Y"])
-            concat_local_Y_labels.append(args["input"][site]["local_Y_labels"])
-
-            #np.concatenate( (concat_Y, args['input'][site]["local_Y"]),  axis=0 )
-            #np.concatenate((concat_local_Y_labels, args["input"][site]["local_Y_labels"]), axis=0)
-            #concat_local_Y_labels.np.concatenate(args["input"][site]["local_Y_labels"])
-
-        filepath = 'test/output/remote/simulatorRun/lowdimembed.txt'
-        f = open(filepath, 'w+')
-        for line1, line2 in zip(concat_Y, concat_local_Y_labels):
-            f.writelines(([ str(line1), str(line2)]))
-        f.close()
-        #concat_Y =  [int(i) for i in concat_Y]
-        #concat_local_Y_labels = [int(j) for j in concconcat_local_Y_labelsat_Y]
-
-        #raise Exception( concat_Y, concat_local_Y_labels)
-        #raise Exception(aaa)
-
-        #raise Exception( concat_Y, concat_local_Y_labels)
-
-
-
-    else:
-
-        computation_output = {"output": {
+    computation_output = {"output": {
                                 "compAvgError": compAvgError,
                                 "number_of_iterations": 0,
                                 "shared_Y": Y.tolist(),
@@ -225,7 +184,7 @@ def remote_3(args):
     aSize[0] = sys.getsizeof(compAvgError);
     aSize[1] = sys.getsizeof(Y.tolist());
     totalSize = sum(aSize);
-    #raise Exception('I am in remote_3 funcation somehow. Total size : ', totalSize)
+    raise Exception('I am in remote_3 funcation somehow. Total size : ', totalSize)
     # The problem is happenning here. During passing 12 KB of data it is showing error
 
     return json.dumps(computation_output)
