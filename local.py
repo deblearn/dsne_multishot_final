@@ -1,10 +1,12 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 import numpy as np
+import os
 import json
 import sys
 from tsneFunctions import normalize_columns, tsne, master_child, listRecursive
 from tsneFunctions import demeanL
+#from ancillary import list_recursive
 
 
 def local_noop(args):
@@ -58,8 +60,13 @@ def local_1(args):
     #raise Exception( 'local_1 function startings')
 
     #shared_X = np.loadtxt('test/input/simulatorRun/shared_x.txt')
-    shared_X = np.loadtxt('test/input/simulatorRun/mnist2500_X.txt')
-    #shared_X = np.loadtxt('test/input/simulatorRun/test_high_dimensional_mnist_data.txt')
+
+    shared_X = np.loadtxt('test/remote/simulatorRun/mnist2500_X.txt')
+
+
+    #with open(os.path.join(args["state"]["baseDirectory"], mnist2500_X)) as fh:
+        #shared_X = fh.readlines()
+
     shared_Y = np.array(args["input"]["shared_y"])
     #raise Exception(shared_Y.shape)
     no_dims = args["cache"]["no_dims"]
@@ -67,9 +74,22 @@ def local_1(args):
     perplexity = args["cache"]["perplexity"]
     sharedRows, sharedColumns = shared_X.shape
 
-    #Site1Data = np.loadtxt('test/input/simulatorRun/site1_x.txt')
-    #Site1Data = np.loadtxt('test/input/simulatorRun/site1_x_high_dimensions.txt')
-    Site1Data = np.loadtxt('test/input/simulatorRun/test_high_dimensional_site_1_mnist_data.txt')
+
+
+    #Site1Data = np.loadtxt('test/local0/simulatorRun/test_high_dimensional_site_1_mnist_data.txt')
+
+    with open(os.path.join(args["state"]["baseDirectory"], 'test_high_dimensional_site_1_mnist_data.txt')) as fh:
+        Site1Data = np.loadtxt(fh.readlines())
+
+    #raise Exception(shared_X.shape, Site1Data.shape)
+
+    Site1Data = np.asarray(Site1Data)
+
+
+    #raise Exception(type(Site1Data))
+
+    #Site1Data = np.asarray(list(map(int, Site1Data)))
+    #raise Exception(type(Site1Data))
 
     # create combinded list by local and remote data
     combined_X = np.concatenate((shared_X, Site1Data), axis=0)
@@ -90,8 +110,6 @@ def local_1(args):
         computation_phase="local")
     local_shared_Y = local_Y[:shared_Y.shape[0], :]
     local_shared_IY = local_iY[:shared_Y.shape[0], :]
-    #raise Exception(np.shape(local_shared_Y))
-    #raise Exception(sys.getsizeof(local_shared_Y))
 
 
     computation_output = \
@@ -123,8 +141,8 @@ def local_2(args):
 
 
     iter = args["input"]["number_of_iterations"]
-    if (iter == 1):
-        raise Exception('I am in local_2 funcation somehow. Iteration no : ', iter)
+    #if (iter == 1):
+        #raise Exception('I am in local_2 funcation somehow. Iteration no : ', iter)
 
     local_sharedRows = args["cache"]["shared_rows"]
     shared_Y = np.array(args["cache"]["shared_y"])
@@ -160,14 +178,20 @@ def local_2(args):
     local_Shared_IY = local_IY[:local_sharedRows, :]
     meanValue = (np.mean(local_Y, 0))
     #local_Y_labels = np.loadtxt('test/input/simulatorRun/site1_y.txt')  ## there is problem here
-    local_Y_labels = np.loadtxt('test/input/simulatorRun/test_high_dimensional_site_1_mnist_label.txt')  ## there is problem here
-    #local_Y_labels = np.loadtxt('test/input/simulatorRun/site1_high_dimensional_label.txt')  ## there is problem here
 
+
+    #local_Y_labels = np.loadtxt('test/local0/simulatorRun/test_high_dimensional_site_1_mnist_label.txt')  ## there is problem here
+
+
+    with open(os.path.join(args["state"]["baseDirectory"], 'test_high_dimensional_site_1_mnist_label.txt')) as fh1:
+        local_Y_labels = np.loadtxt(fh1.readlines())
 
     if iter > 2:
-        #local_Y_labels = np.loadtxt('test/input/simulatorRun/site1_y.txt')  ## there is problem here
-        #local_Y_labels = np.loadtxt('test/input/simulatorRun/site1_high_dimensional_label.txt')  ## there is problem here
-        local_Y_labels = np.loadtxt('test/input/simulatorRun/test_high_dimensional_site_1_mnist_label.txt')  ## there is problem here
+        #local_Y_labels = np.loadtxt('test/local0/simulatorRun/test_high_dimensional_site_1_mnist_label.txt')  ## there is problem here
+
+        with open(os.path.join(args["state"]["baseDirectory"], 'test_high_dimensional_site_1_mnist_label.txt')) as fh2:
+            local_Y_labels = np.loadtxt(fh2.readlines())
+
         computation_output = {
             "output": {
                 "MeanX": meanValue[0],

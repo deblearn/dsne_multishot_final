@@ -288,7 +288,10 @@ def master_child(Y, dY, iY, gains, n, Shared_length, P, iter, C):
     num = 1 / (1 + np.add(np.add(-2 * np.dot(Y, Y.T), sum_Y).T, sum_Y))
     num[range(n), range(n)] = 0
     Q = num / np.sum(num)
+
+    #I have to change in here
     Q = np.maximum(Q, 1e-12)
+    #Q = np.maximum(Q, .0001)
 
     # Compute gradient
     PQ = P - Q

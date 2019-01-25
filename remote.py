@@ -5,6 +5,8 @@ import numpy as np
 import sys
 from tsneFunctions import normalize_columns, tsne, listRecursive
 import json
+import os
+#from ancillary import list_recursive
 
 
 def remote_1(args):
@@ -40,13 +42,18 @@ def remote_1(args):
            "shared_Y" : the low-dimensional remote site data
            }
        '''
+    #home / deb / Documents / harsh_multishot / dsne - ms_test / test / remote / simulatorRun
 
-    shared_X = np.loadtxt('test/input/simulatorRun/mnist2500_X.txt')
-    shared_Labels = np.loadtxt('test/input/simulatorRun/mnist2500_labels.txt')
-    #shared_X = np.loadtxt('test/input/simulatorRun/shared_x.txt')
-    #shared_Labels = np.loadtxt('test/input/simulatorRun/shared_y.txt')
-    #shared_X = np.loadtxt('test/input/simulatorRun/test_high_dimensional_mnist_data.txt')
-    #shared_Labels = np.loadtxt('test/input/simulatorRun/test_high_dimensional_mnist_label.txt')
+    shared_X = np.loadtxt('test/remote/simulatorRun/mnist2500_X.txt')
+    shared_Labels = np.loadtxt('test/remote/simulatorRun/mnist2500_labels.txt')
+
+    with open(os.path.join(args["state"]["baseDirectory"], 'mnist2500_X.txt')) as fh:
+        shared_X = np.loadtxt(fh.readlines())
+
+    with open(os.path.join(args["state"]["baseDirectory"], 'mnist2500_labels.txt')) as fh1:
+        shared_Labels = np.loadtxt(fh1.readlines())
+
+
 
     no_dims = args["input"]["local0"]["no_dims"]
     initial_dims = args["input"]["local0"]["initial_dims"]
@@ -161,7 +168,7 @@ def remote_3(args):
     #if(iteration == 20):
         #raise Exception('In remote_3 after iterations 20')
 
-    if(iteration<200):
+    if(iteration<50):
         phase = 'remote_2';
     else:
         phase = 'remote_3';
@@ -184,7 +191,9 @@ def remote_3(args):
     aSize[0] = sys.getsizeof(compAvgError);
     aSize[1] = sys.getsizeof(Y.tolist());
     totalSize = sum(aSize);
-    raise Exception('I am in remote_3 funcation somehow. Total size : ', totalSize)
+
+    #if(iteration==8):
+        #raise Exception('I am in remote_3 funcation somehow. Total size : ', totalSize)
     # The problem is happenning here. During passing 12 KB of data it is showing error
 
     return json.dumps(computation_output)
