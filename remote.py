@@ -42,10 +42,6 @@ def remote_1(args):
            "shared_Y" : the low-dimensional remote site data
            }
        '''
-    #home / deb / Documents / harsh_multishot / dsne - ms_test / test / remote / simulatorRun
-
-    shared_X = np.loadtxt('test/remote/simulatorRun/mnist2500_X.txt')
-    shared_Labels = np.loadtxt('test/remote/simulatorRun/mnist2500_labels.txt')
 
     with open(os.path.join(args["state"]["baseDirectory"], 'mnist2500_X.txt')) as fh:
         shared_X = np.loadtxt(fh.readlines())
@@ -87,7 +83,7 @@ def remote_1(args):
             "max_iterations": max_iter
         }
     }
-    #raise Exception(shared_Y.shape)
+
     return json.dumps(computation_output)
 
 
@@ -107,6 +103,7 @@ def remote_2(args):
         local2Yvalues: Final low dimensional local site 2 data
     }
     '''
+    #raise Exception(args["input"])
 
     Y =  np.array(args["cache"]["shared_y"])
     #raise Exception(Y)
@@ -142,15 +139,27 @@ def remote_3(args):
     iteration +=1;
     C = args["cache"]["compAvgError"]["error"]
 
-    #Y = args["input"]["local_Y"]
-
-    #average_Y = (np.mean(Y, 0))
     average_Y = [0]*2
     C = 0
-    #avg_beta_vector = np.mean([input_list[site]["beta_vector_local"] for site in input_list], axis=0)
+
 
     average_Y[0] = np.mean([args['input'][site]['MeanX'] for site in args["input"]])
     average_Y[1] = np.mean([args['input'][site]['MeanY'] for site in args["input"]])
+
+
+    # The following for loop will store labels by site. Suppose 100 low dimensional y values come form local site 2.
+    # So the labels will be one dimensional value where all values will be 2 in that array
+    for site in args["input"]:
+        rows = len(np.array(args["input"][site]["local_Y_labels"]))
+        lable_array = np.zeros(rows)
+        lable_array = ( np.ones(rows) * int(site[-1]) )
+        #ppp = int(site[-1])
+        #if(ppp==3):
+            #raise Exception(lable_array)
+
+    # The following sites will store the labels of data from each site
+    #local_labels = np.vstack([args['input'][site]['local_Y_labels'] for site in args["input"]])
+
 
     average_Y = np.array(average_Y)
     C = C + np.mean([args['input'][site]['error'] for site in args["input"]])
@@ -160,18 +169,27 @@ def remote_3(args):
 
     Y = meanY + meaniY
 
-
     Y -= np.tile(average_Y, (Y.shape[0], 1))
 
     compAvgError = {'avgX': average_Y[0], 'avgY': average_Y[1], 'error': C}
 
-    #if(iteration == 20):
-        #raise Exception('In remote_3 after iterations 20')
 
     if(iteration<50):
         phase = 'remote_2';
     else:
         phase = 'remote_3';
+
+
+    if (iteration == 2):
+
+        data_folder = os.path.join(args["state"]["outputDirectory"],"raw_data_final.txt")
+        f1 = open(data_folder,'w')
+
+        for i in range(0, len(Y)):
+            f1.write(str(Y[i][0]) + '\t')  # str() converts to string
+            f1.write(str(Y[i][1]) + '\n')  # str() converts to string
+        f1.close()
+        raise Exception('I am in iteration 6 in remote function',Y.shape)
 
 
     computation_output = {"output": {
@@ -186,15 +204,6 @@ def remote_3(args):
                                 }
                             }
 
-
-    aSize = [0]*2
-    aSize[0] = sys.getsizeof(compAvgError);
-    aSize[1] = sys.getsizeof(Y.tolist());
-    totalSize = sum(aSize);
-
-    #if(iteration==8):
-        #raise Exception('I am in remote_3 funcation somehow. Total size : ', totalSize)
-    # The problem is happenning here. During passing 12 KB of data it is showing error
 
     return json.dumps(computation_output)
 

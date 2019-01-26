@@ -11,9 +11,7 @@ from tsneFunctions import demeanL
 
 def local_noop(args):
     input_list = args["input"]
-    #a = 5
-    #raise Exception(a)
-    #raise Exception( 'local_noop function startings')
+
     computation_output = {
         "output": {
             "computation_phase": 'local_noop',
@@ -56,19 +54,11 @@ def local_1(args):
            dimensional shared data Y and corresponding IY
        '''
 
-    # corresponds to local
-    #raise Exception( 'local_1 function startings')
 
-    #shared_X = np.loadtxt('test/input/simulatorRun/shared_x.txt')
 
     shared_X = np.loadtxt('test/remote/simulatorRun/mnist2500_X.txt')
 
-
-    #with open(os.path.join(args["state"]["baseDirectory"], mnist2500_X)) as fh:
-        #shared_X = fh.readlines()
-
     shared_Y = np.array(args["input"]["shared_y"])
-    #raise Exception(shared_Y.shape)
     no_dims = args["cache"]["no_dims"]
     initial_dims = args["cache"]["initial_dims"]
     perplexity = args["cache"]["perplexity"]
@@ -76,20 +66,11 @@ def local_1(args):
 
 
 
-    #Site1Data = np.loadtxt('test/local0/simulatorRun/test_high_dimensional_site_1_mnist_data.txt')
-
     with open(os.path.join(args["state"]["baseDirectory"], 'test_high_dimensional_site_1_mnist_data.txt')) as fh:
         Site1Data = np.loadtxt(fh.readlines())
 
-    #raise Exception(shared_X.shape, Site1Data.shape)
-
     Site1Data = np.asarray(Site1Data)
 
-
-    #raise Exception(type(Site1Data))
-
-    #Site1Data = np.asarray(list(map(int, Site1Data)))
-    #raise Exception(type(Site1Data))
 
     # create combinded list by local and remote data
     combined_X = np.concatenate((shared_X, Site1Data), axis=0)
@@ -141,8 +122,6 @@ def local_2(args):
 
 
     iter = args["input"]["number_of_iterations"]
-    #if (iter == 1):
-        #raise Exception('I am in local_2 funcation somehow. Iteration no : ', iter)
 
     local_sharedRows = args["cache"]["shared_rows"]
     shared_Y = np.array(args["cache"]["shared_y"])
@@ -156,11 +135,7 @@ def local_2(args):
     local_gains = np.array(args["cache"]["local_gains"])
 
     shared_Y = np.array(args["input"]["shared_Y"])
-    #iter = args["input"]["number_of_iterations"]
 
-    a,b = shared_Y.shape
-    c,d = local_Y.shape
-    #raise Exception( a, b,c,d,local_sharedRows)
 
     #It should be the average one
     local_Y[:local_sharedRows, :] = shared_Y
@@ -186,7 +161,7 @@ def local_2(args):
     with open(os.path.join(args["state"]["baseDirectory"], 'test_high_dimensional_site_1_mnist_label.txt')) as fh1:
         local_Y_labels = np.loadtxt(fh1.readlines())
 
-    if iter > 2:
+    if iter == 500:
         #local_Y_labels = np.loadtxt('test/local0/simulatorRun/test_high_dimensional_site_1_mnist_label.txt')  ## there is problem here
 
         with open(os.path.join(args["state"]["baseDirectory"], 'test_high_dimensional_site_1_mnist_label.txt')) as fh2:
