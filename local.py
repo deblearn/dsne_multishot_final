@@ -56,7 +56,13 @@ def local_1(args):
 
 
 
-    shared_X = np.loadtxt('test/remote/simulatorRun/mnist2500_X.txt')
+    #shared_X = np.loadtxt('test/remote/simulatorRun/mnist2500_X.txt')
+    with open(os.path.join(args["state"]["baseDirectory"], 'mnist2500_X.txt')) as fhRemote:
+        shared_X = np.loadtxt(fhRemote.readlines())
+
+    shared_X = np.asarray(shared_X)
+
+
 
     shared_Y = np.array(args["input"]["shared_y"])
     no_dims = args["cache"]["no_dims"]
@@ -158,14 +164,20 @@ def local_2(args):
     #local_Y_labels = np.loadtxt('test/local0/simulatorRun/test_high_dimensional_site_1_mnist_label.txt')  ## there is problem here
 
 
-    with open(os.path.join(args["state"]["baseDirectory"], 'test_high_dimensional_site_1_mnist_label.txt')) as fh1:
-        local_Y_labels = np.loadtxt(fh1.readlines())
+    #with open(os.path.join(args["state"]["baseDirectory"], 'test_high_dimensional_site_1_mnist_label.txt')) as fh1:
+        #local_Y_labels = np.loadtxt(fh1.readlines())
 
-    if iter == 500:
+
+    #raise Exception('I am inside local2 function and befor iter>0 condition:', iter)
+
+    if iter>=0:
         #local_Y_labels = np.loadtxt('test/local0/simulatorRun/test_high_dimensional_site_1_mnist_label.txt')  ## there is problem here
 
         with open(os.path.join(args["state"]["baseDirectory"], 'test_high_dimensional_site_1_mnist_label.txt')) as fh2:
             local_Y_labels = np.loadtxt(fh2.readlines())
+        #raise Exception('I am inside local2 function and the labels are:', local_Y_labels.shape)
+
+
 
         computation_output = {
             "output": {

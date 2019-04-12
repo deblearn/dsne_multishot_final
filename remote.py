@@ -153,12 +153,32 @@ def remote_3(args):
         rows = len(np.array(args["input"][site]["local_Y_labels"]))
         lable_array = np.zeros(rows)
         lable_array = ( np.ones(rows) * int(site[-1]) )
-        #ppp = int(site[-1])
-        #if(ppp==3):
-            #raise Exception(lable_array)
+        ppp = int(site[-1])
+
 
     # The following sites will store the labels of data from each site
+    #local_labels = np.vstack( np.array([args["input"][site]["local_Y_labels"] for site in args["input"]]))
     #local_labels = np.vstack([args['input'][site]['local_Y_labels'] for site in args["input"]])
+
+
+
+    with open(os.path.join(args["state"]["baseDirectory"], 'mnist2500_labels.txt')) as fh1:
+        shared_Labels = np.loadtxt(fh1.readlines())
+    sharedLength = len(shared_Labels)
+    prevLabels = [0]*sharedLength
+    prevLabels = shared_Labels
+
+    for site in args["input"]:
+        local_labels1 = np.array(args["input"][site]["local_Y_labels"])
+        prevLength = len(prevLabels); curLength = len(local_labels1); totalLength = prevLength + curLength;
+        combinedLabels = [0]*totalLength;
+        combinedLabels[0:prevLength] = prevLabels;
+        combinedLabels[prevLength:totalLength] = local_labels1;
+        #combinedLabels = np.vstack(prevLabels,local_labels1)
+        prevLabels = combinedLabels
+
+    raise Exception((np.asarray(prevLabels)).shape)
+
 
 
     average_Y = np.array(average_Y)
@@ -174,13 +194,14 @@ def remote_3(args):
     compAvgError = {'avgX': average_Y[0], 'avgY': average_Y[1], 'error': C}
 
 
-    if(iteration<50):
+    if(iteration==965):
         phase = 'remote_2';
     else:
         phase = 'remote_3';
 
+    #raise Exception(local_labels.shape)
 
-    if (iteration == 2):
+    if (iteration == 965):
 
         data_folder = os.path.join(args["state"]["outputDirectory"],"raw_data_final.txt")
         f1 = open(data_folder,'w')
