@@ -187,7 +187,7 @@ def remote_3(args):
 
     #raise Exception(local_labels.shape)
 
-    if (iteration > 50):
+    if (iteration == 990):
 
         #store shared and all site data
         sharedDataLength = len(Y)
