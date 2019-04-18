@@ -149,12 +149,13 @@ def remote_3(args):
 
     # The following for loop will store labels by site. Suppose 100 low dimensional y values come form local site 2.
     # So the labels will be one dimensional value where all values will be 2 in that array
-    for site in args["input"]:
+    '''for site in args["input"]:
         rows = len(np.array(args["input"][site]["local_Y_labels"]))
         lable_array = np.zeros(rows)
         lable_array = ( np.ones(rows) * int(site[-1]) )
-        ppp = int(site[-1])
-
+        ppp = int(site[-1])'''
+        #if(ppp==2):
+            #raise Exception(lable_array)
 
     # The following sites will store the labels of data from each site
     #local_labels = np.vstack( np.array([args["input"][site]["local_Y_labels"] for site in args["input"]]))
@@ -162,22 +163,7 @@ def remote_3(args):
 
 
 
-    with open(os.path.join(args["state"]["baseDirectory"], 'mnist2500_labels.txt')) as fh1:
-        shared_Labels = np.loadtxt(fh1.readlines())
-    sharedLength = len(shared_Labels)
-    prevLabels = [0]*sharedLength
-    prevLabels = shared_Labels
-
-    for site in args["input"]:
-        local_labels1 = np.array(args["input"][site]["local_Y_labels"])
-        prevLength = len(prevLabels); curLength = len(local_labels1); totalLength = prevLength + curLength;
-        combinedLabels = [0]*totalLength;
-        combinedLabels[0:prevLength] = prevLabels;
-        combinedLabels[prevLength:totalLength] = local_labels1;
-        #combinedLabels = np.vstack(prevLabels,local_labels1)
-        prevLabels = combinedLabels
-
-    raise Exception((np.asarray(prevLabels)).shape)
+    #raise Exception((np.asarray(prevLabels)).shape)
 
 
 
@@ -194,23 +180,67 @@ def remote_3(args):
     compAvgError = {'avgX': average_Y[0], 'avgY': average_Y[1], 'error': C}
 
 
-    if(iteration==965):
+    if(iteration<990):
         phase = 'remote_2';
     else:
         phase = 'remote_3';
 
     #raise Exception(local_labels.shape)
 
-    if (iteration == 965):
+    if (iteration > 50):
 
-        data_folder = os.path.join(args["state"]["outputDirectory"],"raw_data_final.txt")
+        #store shared and all site data
+        sharedDataLength = len(Y)
+        prevData = np.zeros((sharedDataLength, 2));
+        prevData = Y
+
+        for site in args["input"]:
+            local_data1 = np.array(args["input"][site]["local_Y"])
+            prevLength = len(prevData);
+            curLength = len(local_data1);
+            totalLength = prevLength + curLength;
+
+            combinedData = np.zeros((totalLength, 2));
+            combinedData[0:prevLength,:] = prevData;
+            combinedData[prevLength:totalLength,:] = local_data1;
+            # combinedLabels = np.vstack(prevLabels,local_labels1)
+            prevData = combinedData
+
+        data_folder = os.path.join(args["state"]["outputDirectory"],"low_dim_data_final.txt")
         f1 = open(data_folder,'w')
 
-        for i in range(0, len(Y)):
-            f1.write(str(Y[i][0]) + '\t')  # str() converts to string
-            f1.write(str(Y[i][1]) + '\n')  # str() converts to string
+        for i in range(0, len(prevData)):
+            f1.write(str(prevData[i][0]) + '\t')  # str() converts to string
+            f1.write(str(prevData[i][1]) + '\n')  # str() converts to string
         f1.close()
-        raise Exception('I am in iteration 6 in remote function',Y.shape)
+        #raise Exception('I am in iteration 6 in remote function',Y.shape)
+
+
+        with open(os.path.join(args["state"]["baseDirectory"], 'mnist2500_labels.txt')) as fh1:
+            shared_Labels = np.loadtxt(fh1.readlines())
+        sharedLength = len(shared_Labels)
+        prevLabels = [0] * sharedLength
+        prevLabels = shared_Labels
+
+        for site in args["input"]:
+            local_labels1 = np.array(args["input"][site]["local_Y_labels"])
+            prevLength = len(prevLabels);
+            curLength = len(local_labels1);
+            totalLength = prevLength + curLength;
+            combinedLabels = [0] * totalLength;
+            combinedLabels[0:prevLength] = prevLabels;
+            combinedLabels[prevLength:totalLength] = local_labels1;
+            # combinedLabels = np.vstack(prevLabels,local_labels1)
+            prevLabels = combinedLabels
+
+        data_folder1 = os.path.join(args["state"]["outputDirectory"],"labels_final.txt")
+        f2 = open(data_folder1,'w')
+
+        for i in range(0, len(prevLabels)):
+            f2.write(str(prevLabels[i]) + '\t')  # str() converts to string
+        f2.close()
+
+
 
 
     computation_output = {"output": {
