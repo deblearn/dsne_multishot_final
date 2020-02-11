@@ -71,11 +71,11 @@ def remote_1(args):
         computation_phase="remote")
     #raise Exception(shared_X)
 
-
+    np.save(os.path.join(args['state']['transferDirectory'], 'shared_Y.npy'), shared_Y)
 
     computation_output = {
         "output": {
-            "shared_y": shared_Y.tolist(),
+            "shared_y": 'shared_Y.npy',
             "computation_phase": 'remote_1',
         },
         "cache": {
@@ -83,6 +83,7 @@ def remote_1(args):
             "max_iterations": max_iter
         }
     }
+
 
     return json.dumps(computation_output)
 
@@ -114,12 +115,13 @@ def remote_2(args):
 
     compAvgError = {'avgX': average_Y[0], 'avgY': average_Y[1], 'error': C}
 
-    computation_output = \
-    {
+    np.save(os.path.join(args['state']['transferDirectory'], 'shared_Y.npy'), shared_Y)
+
+    computation_output = {
         "output": {
             "compAvgError": compAvgError,
             "computation_phase": 'remote_2',
-            "shared_Y": Y.tolist(),
+            "shared_Y": 'shared_Y.npy',
             "number_of_iterations": 0
 
                 },
@@ -130,6 +132,7 @@ def remote_2(args):
         }
     }
     #raise Exception(Y.shape)
+    raise Exception('fuck coinstac')
     return json.dumps(computation_output)
 
 
@@ -144,6 +147,7 @@ def remote_3(args):
 
 
     average_Y[0] = np.mean([args['input'][site]['MeanX'] for site in args["input"]])
+
     average_Y[1] = np.mean([args['input'][site]['MeanY'] for site in args["input"]])
 
 
@@ -170,8 +174,16 @@ def remote_3(args):
     average_Y = np.array(average_Y)
     C = C + np.mean([args['input'][site]['error'] for site in args["input"]])
 
-    meanY = np.mean([args["input"][site]["local_Shared_Y"] for site in args["input"]], axis=0)
-    meaniY = np.mean([args["input"][site]["local_Shared_iY"] for site in args["input"]], axis=0)
+    shared_Y = np.load(os.path.join(args['state']['baseDirectory'], args['input']['shared_y']), allow_pickle=True)
+
+    meanY = np.mean([np.load(os.path.join(args["site"]["baseDirectory"],args["input"][site]["local_Shared_Y"] ), allow_pickle=True) for site in args["input"]], axis=0)
+    meaniY = np.mean([np.load(os.path.join(args["site"]["baseDirectory"], args["input"][site]["local_Shared_iY"]), allow_pickle=True) for site in args["input"]], axis=0)
+
+
+    #meanY = np.mean([args["input"][site]["local_Shared_Y"] for site in args["input"]], axis=0)
+    #meaniY = np.mean([args["input"][site]["local_Shared_iY"] for site in args["input"]], axis=0)
+
+    raise Exception('I am at remote 3', meanY)
 
     Y = meanY + meaniY
 
@@ -187,7 +199,7 @@ def remote_3(args):
 
     #raise Exception(local_labels.shape)
 
-    if (iteration == 990):
+    if (iteration > 50):
 
         #store shared and all site data
         sharedDataLength = len(Y)
