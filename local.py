@@ -6,6 +6,7 @@ import json
 import sys
 from tsneFunctions import normalize_columns, tsne, master_child, listRecursive
 from tsneFunctions import demeanL
+#from rw_utils import read_file
 #from ancillary import list_recursive
 
 
@@ -56,18 +57,13 @@ def local_1(args):
 
 
 
-    #shared_X = np.loadtxt('test/remote/simulatorRun/mnist2500_X.txt')
 
-    with open(os.path.join(args["state"]["baseDirectory"], 'mnist2500_X.txt')) as fhRemote:
-        shared_X = np.loadtxt(fhRemote.readlines())
 
-    shared_X = np.asarray(shared_X)
-
+    shared_X = np.load(os.path.join(args['state']['baseDirectory'], args['input']['shared_X']), allow_pickle=True)
     shared_Y = np.load(os.path.join(args['state']['baseDirectory'], args['input']['shared_y']), allow_pickle=True)
 
     #raise Exception(shared_Y)
 
-    #shared_Y = np.array(args["input"]["shared_y"])
     no_dims = args["cache"]["no_dims"]
     initial_dims = args["cache"]["initial_dims"]
     perplexity = args["cache"]["perplexity"]
@@ -102,25 +98,35 @@ def local_1(args):
     local_shared_Y = local_Y[:shared_Y.shape[0], :]
     local_shared_IY = local_iY[:shared_Y.shape[0], :]
 
+
+    # Save file for transferring to remote
     np.save(os.path.join(args['state']['transferDirectory'], 'local_shared_Y.npy'), local_shared_Y)
     np.save(os.path.join(args['state']['transferDirectory'], 'local_shared_IY.npy'), local_shared_IY)
+
+    #save file in local cache directory
+    np.save(os.path.join(args['state']['cacheDirectory'], 'local_Y.npy'), local_Y)
+    np.save(os.path.join(args['state']['cacheDirectory'], 'local_dY.npy'), local_dY)
+    np.save(os.path.join(args['state']['cacheDirectory'], 'local_IY.npy'), local_iY)
+    np.save(os.path.join(args['state']['cacheDirectory'], 'local_P.npy'), local_P)
+    np.save(os.path.join(args['state']['cacheDirectory'], 'local_gains.npy'), local_gains)
+    np.save(os.path.join(args['state']['cacheDirectory'], 'shared_Y.npy'), shared_Y)
 
 
     computation_output = \
         {
             "output": {
                 "localSite1SharedY": 'local_shared_Y.npy',
-                'computation_phase': 'local_shared_IY.npy'
+                'computation_phase': 'local_1',
             },
             "cache": {
-                "local_Y": local_Y.tolist(),
-                "local_dY": local_dY.tolist(),
-                "local_iY": local_iY.tolist(),
-                "local_P": local_P.tolist(),
+                "local_Y": 'local_Y.npy',
+                "local_dY": 'local_dY.npy',
+                "local_IY": 'local_IY.npy',
+                "local_P": 'local_P.npy',
                 "local_n": local_n,
-                "local_gains": local_gains.tolist(),
+                "local_gains": 'local_gains.npy',
                 "shared_rows": sharedRows,
-                "shared_y": shared_Y.tolist()
+                "shared_Y": 'shared_Y.npy'
             }
         }
 
@@ -132,29 +138,35 @@ def local_1(args):
 
 def local_2(args):
 
+    cache_ = args["cache"]
+    state_ = args["state"]
+    input_dir = state_["baseDirectory"]
+    cache_dir = state_["cacheDirectory"]
 
-    iter = args["input"]["number_of_iterations"]
 
     local_sharedRows = args["cache"]["shared_rows"]
-    #shared_Y = np.array(args["cache"]["shared_y"])
+    local_n = args["cache"]["local_n"]
+    local_Y = np.load(os.path.join(cache_dir, cache_["local_Y"]))
+    local_dY = np.load(os.path.join(cache_dir, args["cache"]["local_dY"]))
+    local_IY = np.load(os.path.join(cache_dir, args["cache"]["local_IY"]))
+    local_P = np.load(os.path.join(cache_dir, args["cache"]["local_P"]))
+    local_gains = np.load(os.path.join(cache_dir, args["cache"]["local_gains"]))
 
     compAvgError1 = args["input"]["compAvgError"]
-    local_Y = np.array(args["cache"]["local_Y"])
-    local_dY = np.array(args["cache"]["local_dY"])
-    local_IY = np.array(args["cache"]["local_iY"])
-    local_P = np.array(args["cache"]["local_P"])
-    local_n = args["cache"]["local_n"]
-    local_gains = np.array(args["cache"]["local_gains"])
+    iter = args["input"]["number_of_iterations"]
+
+
 
 # Made changes here. Instead of extract shared_Y I am extracting it from cache
     if(iter==0):
-        shared_Y = np.array(args["cache"]["shared_y"])
+        shared_Y = np.load(os.path.join(cache_dir, args["cache"]["shared_Y"]))
     else:
-        #shared_Y = np.array(args["input"]["shared_Y"])
-        shared_Y = np.load(os.path.join(args['state']['baseDirectory'], args['input']['shared_y']), allow_pickle=True)
+        shared_Y = np.load(os.path.join(args['state']['baseDirectory'], args['input']['shared_Y']), allow_pickle=True)
+
 
 
     #It should be the average one
+    #raise Exception()
     local_Y[:local_sharedRows, :] = shared_Y
     C = compAvgError1['error']
     demeanAvg = (np.mean(local_Y, 0))
@@ -170,69 +182,93 @@ def local_2(args):
     local_Shared_IY = local_IY[:local_sharedRows, :]
     meanValue = (np.mean(local_Y, 0))
 
-    np.save(os.path.join(args['state']['transferDirectory'], 'local_shared_Y.npy'), local_shared_Y)
-    np.save(os.path.join(args['state']['transferDirectory'], 'local_shared_IY.npy'), local_shared_IY)
+
+    # save files to transfer
+    np.save(os.path.join(args['state']['transferDirectory'], 'local_Shared_Y.npy'), local_Shared_Y)
+    np.save(os.path.join(args['state']['transferDirectory'], 'local_Shared_IY.npy'), local_Shared_IY)
     np.save(os.path.join(args['state']['transferDirectory'], 'local_Y.npy'), local_Y[local_sharedRows:, :])
 
 
-    if iter>=0:
-        #local_Y_labels = np.loadtxt('test/local0/simulatorRun/test_high_dimensional_site_1_mnist_label.txt')  ## there is problem here
+    # save file to local cache directory
+    np.save(os.path.join(args['state']['cacheDirectory'], 'local_Y.npy'), local_Y)
+    np.save(os.path.join(args['state']['cacheDirectory'], 'local_dY.npy'), local_dY)
+    np.save(os.path.join(args['state']['cacheDirectory'], 'local_IY.npy'), local_IY)
+    np.save(os.path.join(args['state']['cacheDirectory'], 'local_P.npy'), P)
+    np.save(os.path.join(args['state']['cacheDirectory'], 'local_gains.npy'), local_gains)
+    #np.save(os.path.join(args['state']['cacheDirectory'], 'local_shared_Y.npy'), local_Shared_Y)
 
+    if(iter==14):
         with open(os.path.join(args["state"]["baseDirectory"], 'test_high_dimensional_site_1_mnist_label.txt')) as fh2:
             local_Y_labels = np.loadtxt(fh2.readlines())
 
         np.save(os.path.join(args['state']['transferDirectory'], 'local_Y_labels.npy'), local_Y_labels)
-        #raise Exception('I am inside local2 function and the labels are:', local_Y_labels.shape)
 
 
+        local_site_value = local_Y[local_sharedRows:, :]
+        local_Y_final_emdedding = np.zeros((local_site_value.shape[0],3))
+        local_Y_final_emdedding[:,0] = local_site_value[:,0]
+        local_Y_final_emdedding[:, 1] = local_site_value[:, 1]
+        local_Y_final_emdedding[:, 2] = local_Y_labels
+
+        np.save(os.path.join(args['state']['transferDirectory'], 'local_Y_final_emdedding.npy'), local_Y_final_emdedding)
+        np.save(os.path.join(args['state']['cacheDirectory'], 'local_Y_final_emdedding.npy'), local_Y_final_emdedding)
+        #raise Exception('I am at local 2 function at iteration 14')
 
         computation_output = {
             "output": {
                 "MeanX": meanValue[0],
                 "MeanY": meanValue[1],
                 "error": C,
-                "local_Shared_iY": 'local_shared_IY.npy',
-                "local_Shared_Y": 'local_shared_Y.npy',
+                "local_Shared_iY": 'local_Shared_IY.npy',
+                "local_Y_final_emdedding": 'local_Y_final_emdedding.npy',
+                "local_Shared_Y": 'local_Shared_Y.npy',
                 "local_Y": 'local_Y.npy',
                 "local_Y_labels": 'local_Y_labels.npy',
                 "computation_phase": "local_2"
         },
 
         "cache": {
-            "local_Y": local_Y.tolist(),
-            "local_dY": local_dY.tolist(),
-            "local_iY": local_IY.tolist(),
-            "local_P": P.tolist(),
-            "local_n": n,
-            "local_gains": local_gains.tolist(),
-            "shared_rows": sharedRows,
-            "shared_y": local_Shared_Y.tolist()
+            "local_Y": 'local_Y.npy',
+            "local_Y_final_emdedding": 'local_Y_final_emdedding.npy',
+            "local_dY": 'local_dY.npy',
+            "local_iY": 'local_IY.npy',
+            "local_P": 'local_P.npy',
+            "local_n": local_n,
+            "local_gains": 'local_gains.npy',
+            "shared_rows": sharedRows
+            #"local_shared_Y": 'local_shared_Y.npy'
         }
         }
 
-    ## there is problem here
+
     else:
+        with open(os.path.join(args["state"]["baseDirectory"], 'test_high_dimensional_site_1_mnist_label.txt')) as fh2:
+            local_Y_labels = np.loadtxt(fh2.readlines())
+
+        np.save(os.path.join(args['state']['transferDirectory'], 'local_Y_labels.npy'), local_Y_labels)
+
         computation_output = {
             "output": {
                 "MeanX": meanValue[0],
                 "MeanY": meanValue[1],
                 "error": C,
-                "local_Shared_iY": 'local_shared_IY.npy',
-                "local_Shared_Y": 'local_shared_Y.npy',
+                "local_Shared_iY": 'local_Shared_IY.npy',
+                "local_Shared_Y": 'local_Shared_Y.npy',
                 "local_Y": 'local_Y.npy',
                 "local_Y_labels": 'local_Y_labels.npy',
                 "computation_phase": "local_2"
-            },
-            "cache": {
-                "local_Y": local_Y.tolist(),
-                "local_dY": local_dY.tolist(),
-                "local_iY": local_IY.tolist(),
-                "local_P": P.tolist(),
-                "local_n": n,
-                "local_gains": local_gains.tolist(),
-                "shared_rows": sharedRows,
-                "shared_y": local_Shared_Y.tolist()
-            }
+        },
+
+        "cache": {
+            "local_Y": 'local_Y.npy',
+            "local_dY": 'local_dY.npy',
+            "local_iY": 'local_IY.npy',
+            "local_P": 'local_P.npy',
+            "local_n": local_n,
+            "local_gains": 'local_gains.npy',
+            "shared_rows": sharedRows
+            #"local_shared_Y": 'local_shared_Y.npy'
+        }
         }
 
 
@@ -241,7 +277,15 @@ def local_2(args):
 
 def local_3(args):
     # corresponds to final
-    return 0
+    computation_output = {
+        "output": {
+
+            "computation_phase": "local_3"
+        }
+
+    }
+
+    return json.dumps(computation_output)
 
 
 if __name__ == '__main__':

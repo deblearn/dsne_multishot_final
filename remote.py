@@ -69,17 +69,23 @@ def remote_1(args):
         initial_dims,
         perplexity,
         computation_phase="remote")
-    #raise Exception(shared_X)
+
 
     np.save(os.path.join(args['state']['transferDirectory'], 'shared_Y.npy'), shared_Y)
+    np.save(os.path.join(args['state']['cacheDirectory'], 'shared_Y.npy'), shared_Y)
+
+    np.save(os.path.join(args['state']['transferDirectory'], 'shared_X.npy'), shared_X)
+
+
 
     computation_output = {
         "output": {
             "shared_y": 'shared_Y.npy',
+            "shared_X": 'shared_X.npy',
             "computation_phase": 'remote_1',
         },
         "cache": {
-            "shared_y": shared_Y.tolist(),
+            "shared_y": 'shared_Y.npy',
             "max_iterations": max_iter
         }
     }
@@ -106,8 +112,13 @@ def remote_2(args):
     '''
     #raise Exception(args["input"])
 
-    Y =  np.array(args["cache"]["shared_y"])
-    #raise Exception(Y)
+    cache_ = args["cache"]
+    state_ = args["state"]
+    input_dir = state_["baseDirectory"]
+    cache_dir = state_["cacheDirectory"]
+    Y = np.load(os.path.join(cache_dir, args["cache"]["shared_y"]))
+
+
     average_Y = (np.mean(Y, 0))
     average_Y[0] = 0
     average_Y[1] = 0
@@ -115,7 +126,7 @@ def remote_2(args):
 
     compAvgError = {'avgX': average_Y[0], 'avgY': average_Y[1], 'error': C}
 
-    np.save(os.path.join(args['state']['transferDirectory'], 'shared_Y.npy'), shared_Y)
+    np.save(os.path.join(args['state']['transferDirectory'], 'shared_Y.npy'), Y)
 
     computation_output = {
         "output": {
@@ -131,8 +142,7 @@ def remote_2(args):
             "number_of_iterations": 0
         }
     }
-    #raise Exception(Y.shape)
-    raise Exception('fuck coinstac')
+
     return json.dumps(computation_output)
 
 
@@ -151,21 +161,6 @@ def remote_3(args):
     average_Y[1] = np.mean([args['input'][site]['MeanY'] for site in args["input"]])
 
 
-    # The following for loop will store labels by site. Suppose 100 low dimensional y values come form local site 2.
-    # So the labels will be one dimensional value where all values will be 2 in that array
-    '''for site in args["input"]:
-        rows = len(np.array(args["input"][site]["local_Y_labels"]))
-        lable_array = np.zeros(rows)
-        lable_array = ( np.ones(rows) * int(site[-1]) )
-        ppp = int(site[-1])'''
-        #if(ppp==2):
-            #raise Exception(lable_array)
-
-    # The following sites will store the labels of data from each site
-    #local_labels = np.vstack( np.array([args["input"][site]["local_Y_labels"] for site in args["input"]]))
-    #local_labels = np.vstack([args['input'][site]['local_Y_labels'] for site in args["input"]])
-
-
 
     #raise Exception((np.asarray(prevLabels)).shape)
 
@@ -174,16 +169,13 @@ def remote_3(args):
     average_Y = np.array(average_Y)
     C = C + np.mean([args['input'][site]['error'] for site in args["input"]])
 
-    shared_Y = np.load(os.path.join(args['state']['baseDirectory'], args['input']['shared_y']), allow_pickle=True)
-
-    meanY = np.mean([np.load(os.path.join(args["site"]["baseDirectory"],args["input"][site]["local_Shared_Y"] ), allow_pickle=True) for site in args["input"]], axis=0)
-    meaniY = np.mean([np.load(os.path.join(args["site"]["baseDirectory"], args["input"][site]["local_Shared_iY"]), allow_pickle=True) for site in args["input"]], axis=0)
 
 
-    #meanY = np.mean([args["input"][site]["local_Shared_Y"] for site in args["input"]], axis=0)
-    #meaniY = np.mean([args["input"][site]["local_Shared_iY"] for site in args["input"]], axis=0)
+    meanY = np.mean([np.load(os.path.join(args["state"]["baseDirectory"],site, args["input"][site]["local_Shared_Y"] ), allow_pickle=True) for site in args["input"]], axis=0)
+    meaniY = np.mean([np.load(os.path.join(args["state"]["baseDirectory"], site, args["input"][site]["local_Shared_iY"]), allow_pickle=True) for site in args["input"]], axis=0)
 
-    raise Exception('I am at remote 3', meanY)
+
+
 
     Y = meanY + meaniY
 
@@ -192,73 +184,45 @@ def remote_3(args):
     compAvgError = {'avgX': average_Y[0], 'avgY': average_Y[1], 'error': C}
 
 
-    if(iteration<990):
-        phase = 'remote_2';
-    else:
+
+    if(iteration == 15):
         phase = 'remote_3';
+    else:
+        phase = 'remote_2';
 
     #raise Exception(local_labels.shape)
 
-    if (iteration > 50):
-
-        #store shared and all site data
-        sharedDataLength = len(Y)
-        prevData = np.zeros((sharedDataLength, 2));
-        prevData = Y
-
-        for site in args["input"]:
-            local_data1 = np.array(args["input"][site]["local_Y"])
-            prevLength = len(prevData);
-            curLength = len(local_data1);
-            totalLength = prevLength + curLength;
-
-            combinedData = np.zeros((totalLength, 2));
-            combinedData[0:prevLength,:] = prevData;
-            combinedData[prevLength:totalLength,:] = local_data1;
-            # combinedLabels = np.vstack(prevLabels,local_labels1)
-            prevData = combinedData
-
-        data_folder = os.path.join(args["state"]["outputDirectory"],"low_dim_data_final.txt")
-        f1 = open(data_folder,'w')
-
-        for i in range(0, len(prevData)):
-            f1.write(str(prevData[i][0]) + '\t')  # str() converts to string
-            f1.write(str(prevData[i][1]) + '\n')  # str() converts to string
-        f1.close()
-        #raise Exception('I am in iteration 6 in remote function',Y.shape)
-
+    if (iteration == 15):
 
         with open(os.path.join(args["state"]["baseDirectory"], 'mnist2500_labels.txt')) as fh1:
             shared_Labels = np.loadtxt(fh1.readlines())
-        sharedLength = len(shared_Labels)
-        prevLabels = [0] * sharedLength
-        prevLabels = shared_Labels
 
-        for site in args["input"]:
-            local_labels1 = np.array(args["input"][site]["local_Y_labels"])
-            prevLength = len(prevLabels);
-            curLength = len(local_labels1);
-            totalLength = prevLength + curLength;
-            combinedLabels = [0] * totalLength;
-            combinedLabels[0:prevLength] = prevLabels;
-            combinedLabels[prevLength:totalLength] = local_labels1;
-            # combinedLabels = np.vstack(prevLabels,local_labels1)
-            prevLabels = combinedLabels
+        shared_Y_final_emdedding = np.zeros((Y.shape[0],3))
+        shared_Y_final_emdedding[:,0] = Y[:,0]
+        shared_Y_final_emdedding[:, 1] = Y[:, 1]
+        shared_Y_final_emdedding[:, 2] = shared_Labels
 
-        data_folder1 = os.path.join(args["state"]["outputDirectory"],"labels_final.txt")
-        f2 = open(data_folder1,'w')
 
-        for i in range(0, len(prevLabels)):
-            f2.write(str(prevLabels[i]) + '\t')  # str() converts to string
-        f2.close()
+        final_embed_value = []
+        final_embed_value = shared_Y_final_emdedding
 
 
 
+        final_embed_value1 = np.vstack([np.load(os.path.join(args["state"]["baseDirectory"], site, args["input"][site]["local_Y_final_emdedding"]),
+                         allow_pickle=True) for site in args["input"]])
+
+        final_embed_value = np.vstack([final_embed_value, final_embed_value1])
+
+        np.save(os.path.join(args['state']['transferDirectory'], 'final_embed_value.npy'), final_embed_value)
+        np.save(os.path.join(args['state']['outputDirectory'], 'final_embed_value.npy'), final_embed_value)
+
+
+    np.save(os.path.join(args['state']['transferDirectory'], 'shared_Y.npy'), Y)
 
     computation_output = {"output": {
                                 "compAvgError": compAvgError,
-                                "number_of_iterations": 0,
-                                "shared_Y": Y.tolist(),
+                                "number_of_iterations": iteration,
+                                "shared_Y": 'shared_Y.npy',
                                 "computation_phase": phase},
 
                                 "cache": {
