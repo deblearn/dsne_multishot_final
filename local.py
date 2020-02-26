@@ -158,16 +158,15 @@ def local_2(args):
 
 
 # Made changes here. Instead of extract shared_Y I am extracting it from cache
-    if(iter==0):
-        shared_Y = np.load(os.path.join(cache_dir, args["cache"]["shared_Y"]))
-    else:
+    if(iter > 0):
         shared_Y = np.load(os.path.join(args['state']['baseDirectory'], args['input']['shared_Y']), allow_pickle=True)
-
+        local_Y[:local_sharedRows, :] = shared_Y
 
 
     #It should be the average one
     #raise Exception()
-    local_Y[:local_sharedRows, :] = shared_Y
+
+
     C = compAvgError1['error']
     demeanAvg = (np.mean(local_Y, 0))
     demeanAvg[0] = compAvgError1['avgX']
@@ -186,6 +185,8 @@ def local_2(args):
     # save files to transfer
     np.save(os.path.join(args['state']['transferDirectory'], 'local_Shared_Y.npy'), local_Shared_Y)
     np.save(os.path.join(args['state']['transferDirectory'], 'local_Shared_IY.npy'), local_Shared_IY)
+
+    # ------ Need to change here. Instead of sending all local_Y, I have to send mean of local_Y and local site data length
     np.save(os.path.join(args['state']['transferDirectory'], 'local_Y.npy'), local_Y[local_sharedRows:, :])
 
 
@@ -197,7 +198,7 @@ def local_2(args):
     np.save(os.path.join(args['state']['cacheDirectory'], 'local_gains.npy'), local_gains)
     #np.save(os.path.join(args['state']['cacheDirectory'], 'local_shared_Y.npy'), local_Shared_Y)
 
-    if(iter==14):
+    if(iter==100):
         with open(os.path.join(args["state"]["baseDirectory"], 'test_high_dimensional_site_1_mnist_label.txt')) as fh2:
             local_Y_labels = np.loadtxt(fh2.readlines())
 

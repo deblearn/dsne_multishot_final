@@ -262,6 +262,7 @@ def tsne(X=np.array([]),
         gains[gains < min_gain] = min_gain
         iY = momentum * iY - eta * (gains * dY)
 
+        # I think this condition can be removed
         if computation_phase is 'remote':
             Y = Y + iY
             Y = Y - np.tile(np.mean(Y, 0), (n, 1))

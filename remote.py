@@ -59,6 +59,7 @@ def remote_1(args):
     shared_X = normalize_columns(shared_X)
     (sharedRows, sharedColumns) = shared_X.shape
 
+    np.random.seed()
     init_Y = np.random.randn(sharedRows, no_dims)
 
     shared_Y = tsne(
@@ -174,25 +175,25 @@ def remote_3(args):
     meanY = np.mean([np.load(os.path.join(args["state"]["baseDirectory"],site, args["input"][site]["local_Shared_Y"] ), allow_pickle=True) for site in args["input"]], axis=0)
     meaniY = np.mean([np.load(os.path.join(args["state"]["baseDirectory"], site, args["input"][site]["local_Shared_iY"]), allow_pickle=True) for site in args["input"]], axis=0)
 
-
+    #raise Exception('shape of meanY', meanY.shape)
 
 
     Y = meanY + meaniY
 
-    Y -= np.tile(average_Y, (Y.shape[0], 1))
+    #Y -= np.tile(average_Y, (Y.shape[0], 1))
 
     compAvgError = {'avgX': average_Y[0], 'avgY': average_Y[1], 'error': C}
 
 
 
-    if(iteration == 15):
+    if(iteration == 101):
         phase = 'remote_3';
     else:
         phase = 'remote_2';
 
     #raise Exception(local_labels.shape)
 
-    if (iteration == 15):
+    if (iteration == 101):
 
         with open(os.path.join(args["state"]["baseDirectory"], 'mnist2500_labels.txt')) as fh1:
             shared_Labels = np.loadtxt(fh1.readlines())
