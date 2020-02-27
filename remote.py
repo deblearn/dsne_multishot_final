@@ -186,14 +186,14 @@ def remote_3(args):
 
 
 
-    if(iteration == 901):
+    if(iteration == 501):
         phase = 'remote_3';
     else:
         phase = 'remote_2';
 
     #raise Exception(local_labels.shape)
 
-    if (iteration == 901):
+    if (iteration > 101):
 
         with open(os.path.join(args["state"]["baseDirectory"], 'mnist2500_labels.txt')) as fh1:
             shared_Labels = np.loadtxt(fh1.readlines())
