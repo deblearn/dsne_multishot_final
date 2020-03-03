@@ -71,7 +71,7 @@ def local_1(args):
 
 
 
-    with open(os.path.join(args["state"]["baseDirectory"], 'test_high_dimensional_site_1_mnist_data.txt')) as fh:
+    with open(os.path.join(args["state"]["baseDirectory"], 'local_site_data.txt')) as fh:
         Site1Data = np.loadtxt(fh.readlines())
 
     Site1Data = np.asarray(Site1Data)
@@ -198,8 +198,8 @@ def local_2(args):
     np.save(os.path.join(args['state']['cacheDirectory'], 'local_gains.npy'), local_gains)
     #np.save(os.path.join(args['state']['cacheDirectory'], 'local_shared_Y.npy'), local_Shared_Y)
 
-    if(iter>100):
-        with open(os.path.join(args["state"]["baseDirectory"], 'test_high_dimensional_site_1_mnist_label.txt')) as fh2:
+    if(iter>10):
+        with open(os.path.join(args["state"]["baseDirectory"], 'local_site_data_label.txt')) as fh2:
             local_Y_labels = np.loadtxt(fh2.readlines())
 
         np.save(os.path.join(args['state']['transferDirectory'], 'local_Y_labels.npy'), local_Y_labels)
@@ -243,8 +243,10 @@ def local_2(args):
 
 
     else:
-        with open(os.path.join(args["state"]["baseDirectory"], 'test_high_dimensional_site_1_mnist_label.txt')) as fh2:
+        with open(os.path.join(args["state"]["baseDirectory"], 'local_site_data_label.txt')) as fh2:
             local_Y_labels = np.loadtxt(fh2.readlines())
+            local_Y_labels = local_Y_labels.astype(int)
+
 
         np.save(os.path.join(args['state']['transferDirectory'], 'local_Y_labels.npy'), local_Y_labels)
 
