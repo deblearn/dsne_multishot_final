@@ -186,7 +186,7 @@ def remote_3(args):
 
 
 
-    if(iteration == 501):
+    if(iteration == 901):
         phase = 'remote_3';
     else:
         phase = 'remote_2';
